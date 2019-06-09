@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Ex4</string>
+    <string name="ip_text_view">IP:</string>
+    <string name="ip_plain_text">ip like 10.0.2.2</string>
+    <string name="port_text_view">port:</string>
+    <string name="port_plain_text">port like 1234</string>
+    <string name="connect_button_text">Connect</string>
+</resources>
