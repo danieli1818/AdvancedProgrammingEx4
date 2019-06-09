@@ -29,9 +29,11 @@ public class JoystickView extends View {
     private int outsideOvalRectLeft;
     private int outsideOvalRectBottom;
 
-    private int innerCircleCX;
-    private int innerCircleCY;
-    private int innerCircleRadius;
+    private float innerCircleCX;
+    private float innerCircleCY;
+    private float innerCircleRadius;
+
+    private boolean isCircleDragged;
 
     public JoystickView(Context context) {
         super(context);
@@ -75,9 +77,9 @@ public class JoystickView extends View {
         outsideOvalRectBottom = (int)(h - dh * h);
 
         double radius = 0.1;
-        innerCircleCX = w / 2;
-        innerCircleCY = h / 2;
-        innerCircleRadius = (int)(radius * 2 * w);
+        innerCircleCX = (float)(w / 2);
+        innerCircleCY = (float)(h / 2);
+        innerCircleRadius = (float)(radius * 2 * w);
     }
 
     protected void onDraw(Canvas canvas) {
@@ -111,9 +113,57 @@ public class JoystickView extends View {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 
-        
+        int action = event.getActionMasked();
 
+        switch(action) {
+            case MotionEvent.ACTION_DOWN: {
+                float x = event.getX();
+                float y = event.getY();
+                if (isInCircle(x, y)) {
+                    setIsCircleDragged(true);
+                } else {
+                    setIsCircleDragged(false);
+                }
+                performClick();
+                break;
+            }
+            case MotionEvent.ACTION_UP: {
+                setIsCircleDragged(false);
+                break;
+            }
+            case MotionEvent.ACTION_MOVE: {
+                if (isCircleDragged) {
+                    float x = event.getX();
+                    float y = event.getY();
+                    innerCircleCX = x;
+                    innerCircleCY = y;
+                }
+                break;
+            }
+        }
+        invalidate();
         return true;
+    }
+
+    @Override
+    public boolean performClick() {
+        return super.performClick();
+    }
+
+    private boolean isInCircle(float posX, float posY) {
+        return (Math.abs(posX - innerCircleCX) <= innerCircleRadius
+                && Math.abs(posY - innerCircleCY) <= innerCircleRadius);
+    }
+
+    private void setIsCircleDragged(boolean value) {
+        if (isCircleDragged == value) {
+            return;
+        }
+        isCircleDragged = value;
+        if (!isCircleDragged) {
+            innerCircleCX = (float)(backgroundWidth / 2);
+            innerCircleCY = (float)(backgroundHeight / 2);
+        }
     }
 
 }
