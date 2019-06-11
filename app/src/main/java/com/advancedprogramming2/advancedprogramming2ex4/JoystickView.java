@@ -13,6 +13,11 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
+import androidx.arch.core.util.Function;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * TODO: document your custom view class.
  */
@@ -34,6 +39,8 @@ public class JoystickView extends View {
     private float innerCircleRadius;
 
     private boolean isCircleDragged;
+
+    private List<Function<String, Void>> updateFunctions;
 
     public JoystickView(Context context) {
         super(context);
@@ -60,6 +67,7 @@ public class JoystickView extends View {
         innerCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         innerCirclePaint.setColor(Color.GREEN);
         innerCirclePaint.setStyle(Paint.Style.FILL);
+        updateFunctions = new ArrayList<Function<String, Void>>();
     }
 
     @Override
@@ -77,8 +85,8 @@ public class JoystickView extends View {
         outsideOvalRectBottom = (int)(h - dh * h);
 
         double radius = 0.1;
-        innerCircleCX = (float)(w / 2);
-        innerCircleCY = (float)(h / 2);
+        setInnerCircleCX((float)(w / 2));
+        setInnerCircleCY((float)(h / 2));
         innerCircleRadius = (float)(radius * 2 * w);
     }
 
@@ -135,8 +143,10 @@ public class JoystickView extends View {
                 if (isCircleDragged) {
                     float x = event.getX();
                     float y = event.getY();
-                    innerCircleCX = x;
-                    innerCircleCY = y;
+                    if (isCircleInOval(x, y, 0)) {
+                        setInnerCircleCX(x);
+                        setInnerCircleCY(y);
+                    }
                 }
                 break;
             }
@@ -161,9 +171,86 @@ public class JoystickView extends View {
         }
         isCircleDragged = value;
         if (!isCircleDragged) {
-            innerCircleCX = (float)(backgroundWidth / 2);
-            innerCircleCY = (float)(backgroundHeight / 2);
+            setInnerCircleCX((float)(backgroundWidth / 2));
+            setInnerCircleCY((float)(backgroundHeight / 2));
         }
+    }
+
+    private void setInnerCircleCX(float newCX) {
+        if (innerCircleCX == newCX) {
+            return;
+        }
+        innerCircleCX = newCX;
+        update("X");
+    }
+
+    private void setInnerCircleCY(float newCY) {
+        if (innerCircleCY == newCY) {
+            return;
+        }
+        innerCircleCY = newCY;
+        update("Y");
+    }
+
+    private boolean isCircleInOval(float posX, float posY, float radius) {
+        if (radius == 0) {
+            return isDotInOval(posX, posY);
+        }
+        return isDotInOval(posX + radius, posY + radius) &&
+                isDotInOval(posX + radius, posY - radius) &&
+                isDotInOval(posX - radius, posY + radius) &&
+                isDotInOval(posX - radius, posY - radius);
+    }
+
+    private boolean isDotInOval(float posX, float posY) {
+        int widthRadius = (outsideOvalRectRight - outsideOvalRectLeft) / 2;
+        int heightRadius = (outsideOvalRectBottom - outsideOvalRectTop) / 2;
+        int x = outsideOvalRectLeft + widthRadius;
+        int y = outsideOvalRectTop + heightRadius;
+        float value1 = ((posX - x) * (posX - x)) / (widthRadius * widthRadius);
+        float value2 = ((posY - y) * (posY - y)) / (heightRadius * heightRadius);
+        return (value1 + value2) <= 1;
+    }
+
+    public float getInnerCircleCX() {
+        return innerCircleCX;
+    }
+
+    public float getInnerCircleCY() {
+        return innerCircleCY;
+    }
+
+    public void addUpdateFunction(Function<String, Void> updateFunction) {
+        updateFunctions.add(updateFunction);
+    }
+
+    public void removeUpdateFunction(Function<String, Void> updateFunction) {
+        if (!updateFunctions.contains(updateFunction)) {
+            return;
+        }
+        updateFunctions.remove(updateFunction);
+    }
+
+    private void update(String data) {
+        for (Function<String, Void> func: updateFunctions) {
+            func.apply(data);
+        }
+    }
+
+    public float getMaxX() {
+        return outsideOvalRectRight;
+    }
+
+    public float getMinX() {
+        return outsideOvalRectLeft;
+    }
+
+    public float getMaxY() {
+        return outsideOvalRectBottom;
+    }
+
+    public float getMinY() {
+        return outsideOvalRectTop;
     }
 
 }

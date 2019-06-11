@@ -5,4 +5,6 @@
     <string name="port_text_view">port:</string>
     <string name="port_plain_text">port like 1234</string>
     <string name="connect_button_text">Connect</string>
+    <string name="connecting_text_view">Connecting to the server please wait...</string>
+    <string name="cancel_button">Cancel</string>
 </resources>
