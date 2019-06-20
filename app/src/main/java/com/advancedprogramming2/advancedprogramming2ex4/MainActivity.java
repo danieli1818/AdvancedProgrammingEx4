@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
         EditText ip = findViewById(R.id.ipPlainText);
         EditText port = findViewById(R.id.portPlainText);
 
-        if (!Utils.isValidIPv4(ip.getText().toString())) {
+        if (Utils.isNotValidIPv4(ip.getText().toString())) {
             alarm("Parameters Aren't Valid Error", "IP: \"" + ip.getText().toString()
                     + "\" isn't a valid IPv4 address");
             return;

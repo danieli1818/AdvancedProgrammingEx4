@@ -89,7 +89,7 @@ import java.util.List;
                 throw e;
             }
             String ip = params[0];
-            if (!Utils.isValidIPv4(ip)) {
+            if (Utils.isNotValidIPv4(ip)) {
                 e = new RuntimeException("IP parameter isn't a valid IPv4 Address");
                 throw e;
             }
