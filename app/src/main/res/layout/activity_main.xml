@@ -9,14 +9,12 @@
     <TextView
         android:id="@+id/portTextView"
         android:layout_width="0dp"
-        android:layout_height="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginLeft="32dp"
+        android:layout_height="29dp"
         android:layout_marginTop="32dp"
         android:text="@string/port_text_view"
         android:textSize="24sp"
-        app:layout_constraintEnd_toStartOf="@+id/portPlainText"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/ipTextView"
+        app:layout_constraintStart_toStartOf="@+id/ipTextView"
         app:layout_constraintTop_toBottomOf="@+id/ipTextView" />
 
     <TextView
@@ -37,29 +35,27 @@
         android:id="@+id/ipPlainText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginRight="32dp"
         android:ems="10"
         android:hint="@string/ip_plain_text"
         android:inputType="textPersonName"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/portTextView"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toEndOf="@+id/ipTextView"
+        app:layout_constraintTop_toTopOf="@+id/ipTextView"
+        tools:ignore="AutoFill"/>
 
     <EditText
         android:id="@+id/portPlainText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginRight="32dp"
         android:ems="10"
         android:hint="@string/port_plain_text"
         android:inputType="textPersonName"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/portTextView"
-        app:layout_constraintTop_toBottomOf="@+id/ipPlainText" />
+        app:layout_constraintEnd_toEndOf="@+id/ipPlainText"
+        app:layout_constraintStart_toStartOf="@+id/ipPlainText"
+        app:layout_constraintTop_toTopOf="@+id/portTextView"
+        tools:ignore="AutoFill"/>
 
     <Button
         android:id="@+id/button"

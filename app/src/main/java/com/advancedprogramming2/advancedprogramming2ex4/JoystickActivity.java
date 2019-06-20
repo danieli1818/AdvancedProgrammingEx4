@@ -1,186 +1,32 @@
 package com.advancedprogramming2.advancedprogramming2ex4;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.arch.core.util.Function;
+import androidx.core.util.Consumer;
+import androidx.core.util.Pair;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
-import java.io.FileInputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.util.concurrent.TimeUnit;
-
+/**
+ * The JoystickActivity class extends AppCompatActivity is the class of the Joystick Activity.
+ */
 public class JoystickActivity extends AppCompatActivity {
 
-    private class AsyncSocketHandler extends AsyncTask<String, Void, Socket> {
+    /**
+     * The Client client of the joystick which is/will be connected to the server.
+     */
+    Client client;
 
-        private Socket mSocket;
-
-        protected Socket doInBackground(String... params) {
-            if (params.length != 2) {
-                throw new RuntimeException("Number Of Params Isn't Valid!");
-            }
-            String ip = params[0];
-            if (!isValidIPv4(ip)) {
-                throw new RuntimeException("IP parameter isn't a valid IPv4 Address");
-            }
-            String portStr = params[1];
-            int port = 1234;
-            try {
-                port = Integer.parseInt(portStr);
-            } catch(Exception e) {
-                throw new RuntimeException(e.getMessage());
-            }
-
-            try {
-                //here you must put your computer's IP address.
-                InetAddress serverAddr = InetAddress.getByName(ip);
-                //create a socket to make the connection with the server
-                mSocket = new Socket();
-//                while (!isCancelled()) {
-                mSocket.connect(new InetSocketAddress(serverAddr, port), 30000);
-//                }
-                if (isCancelled()) {
-                    return null;
-                }
-//                try {
-//                    //sends the message to the server
-//                    OutputStream output = socket.getOutputStream();
-//                    OutputStreamWriter osw = new OutputStreamWriter(output);
-//                    //FileInputStream fis = new FileInputStream(pic);
-//
-//                    osw.write("set /controls/flight/aileron " + String.valueOf(newX));
-//                    osw.flush();
-//                }
-//
-//                catch (Exception e) {
-//                    Log.e("TCP", "S: Error", e);
-//                } finally {
-//                    socket.close();
-//                }
-//                int x = 1;
-//                x = x * 4;
-                return mSocket;
-            } catch (Exception e) {
-                Log.e("TCP", "C: Error", e);
-            }
-
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Socket socket) {
-            super.onPostExecute(socket);
-            onSocketHandlerAsyncTaskFinish(socket);
-        }
-
-        @Override
-        protected void onCancelled() {
-            super.onCancelled();
-            try {
-                if (mSocket != null && mSocket.isConnected()) {
-                    mSocket.close();
-                }
-            } catch (Exception e) {
-                Log.e("TCP", "C: Error", e);
-            }
-        }
-
-        public void closeSocket() {
-            try {
-                if (mSocket != null) {
-                    mSocket.setSoTimeout(0);
-                    mSocket.close();
-                }
-            } catch (Exception e) {
-                Log.e("TCP", "C: Error", e);
-            }
-        }
-
-
-    }
-
-    private class AsyncSocketWriter extends AsyncTask<String, Void, Void> {
-
-        private Socket mSocket;
-
-        public AsyncSocketWriter(Socket socket) {
-            if (socket == null || !socket.isConnected()) {
-                throw new RuntimeException("Error socket isn't valid");
-            }
-            mSocket = socket;
-        }
-
-        protected Void doInBackground(String... params) {
-            if (params.length == 0) {
-                return null;
-            }
-            if (mSocket == null || !mSocket.isConnected()) {
-                throw new RuntimeException("Error socket isn't valid");
-            }
-            try {
-                //sends the message to the server
-                OutputStream output = mSocket.getOutputStream();
-                OutputStreamWriter osw = new OutputStreamWriter(output);
-                //FileInputStream fis = new FileInputStream(pic);
-                for (String param : params) {
-                    osw.write(param +"\r\n");
-                }
-                osw.flush();
-            } catch (Exception e) {
-                throw new RuntimeException(e.getMessage()); //TODO check what to do here in error.
-            }
-
-
-
-            return null;
-        }
-
-//            @Override
-//            protected void onPostExecute(Socket socket) {
-//                super.onPostExecute(socket);
-//                onSocketHandlerAsyncTaskFinish(socket);
-//            }
-
-        @Override
-        protected void onCancelled() {
-            super.onCancelled();
-            try {
-                if (mSocket != null && mSocket.isConnected()) {
-                    mSocket.close();
-                }
-            } catch (Exception e) {
-                Log.e("TCP", "C: Error", e);
-            }
-        }
-
-        public void closeSocket() {
-            try {
-                if (mSocket != null) {
-                    mSocket.close();
-                }
-            } catch (Exception e) {
-                Log.e("TCP", "C: Error", e);
-            }
-        }
-
-
-    }
-
-    private volatile Socket socket;
-    private AsyncSocketHandler ash;
-//    private String ip;
-//    private int port;
-
+    /**
+     * The onCreate Function which runs on the creation of the activity.
+     * @param savedInstanceState The Bundle os saved instance state.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -200,83 +46,49 @@ public class JoystickActivity extends AppCompatActivity {
 //                    , new RuntimeException("IP Is Not Valid"));
 //        }
         String portStr = intent.getStringExtra("port");
-        ash = new AsyncSocketHandler();
-        ash.execute(ip, portStr);
-//        try {
-//            socket = ash.execute(ip, portStr).get(30, TimeUnit.SECONDS);
-//            if (socket == null) {
-//                Intent data = new Intent();
-//                data.putExtra("Error", "Error Connecting To Server.");
-//                data.putExtra("Reason", "Unknown");
-//                setResult(1, data);
-//                finish();
-//                return;
-//            }
-//        } catch(Exception e) {
-//            if (e.getClass().equals(java.util.concurrent.TimeoutException.class)) {
-//                ash.cancel(true);
-//                try {
-//                    socket.setSoTimeout(0);
-//                } catch (Exception eSocket) {
-//                    Log.e("TCP", "T: Error", eSocket);
-//                }
-////                ash.onCancelled();
-////                if (ash.isCancelled()) {
-////                    int x = 4;
-////                    x = x * 4;
-////                }
-////                Intent data = new Intent(this, MainActivity.class);
-////                data.putExtra("key1", "value1");
-////                data.putExtra("key2", "value2");
-////                onBackPressed();
-////                startActivity(data);
-//                // Activity finished return ok, return the data
-////                setResult(RESULT_OK, data);
-////                finish();
-//                Intent data = new Intent();
-//                data.putExtra("Error", "Error Connecting To Server.");
-//                String message = e.getMessage();
-//                if (message == null) {
-//                    message = "Connection Timed Out";
-//                }
-//                data.putExtra("Reason", message);
-//                setResult(1, data);
-//                finish();
-//                return;
-//            }
-//            Log.e("AsyncTask", e.getMessage());
-//        }
-//        port = 1234;
-//        try {
-//            port = Integer.parseInt(portStr);
-//        } catch(NumberFormatException e) {
-//            Log.e("Port", "Port Isn't A Number Error");
-//        }
-
-
-    }
-
-    private boolean isValidIPv4(String ip) {
-        if (ip == null || ip.isEmpty()) {
-            return false;
-        }
-        String[] splittedIP = ip.split("\\.");
-        if (splittedIP.length != 4) {
-            return false;
-        }
-        for (String str : splittedIP) {
-            try {
-                int num = Integer.parseInt(str);
-                if (num < 0 || num > 255) {
-                    return false;
+        try {
+            int port = Integer.parseInt(portStr);
+            client = new Client();
+            client.addUpdateFunction(new Function<Pair<String, RuntimeException>, Void>() {
+                public Void apply(Pair<String, RuntimeException> data) {
+                    onConnected(data.second);
+                    return null;
                 }
-            } catch (Exception e) {
-                return false;
+            });
+            client.addErrorHandlingFunction(new Consumer<RuntimeException>() {
+                @Override
+                public void accept(RuntimeException e) {
+                    errorHandlingFunction(e);
+                }
+            });
+            client.connect(ip, port);
+        } catch (Exception e) {
+            Log.e("Client", "Error", e);
+            if (e.getClass().equals(NumberFormatException.class)) {
+                Intent data = new Intent();
+                data.putExtra("Error", "Error Connecting To Server.");
+                String message = "Invalid Port";
+                data.putExtra("Reason", message);
+                setResult(1, data);
+                finish();
+                return;
             }
+            Intent data = new Intent();
+            data.putExtra("Error", "Error Connecting To Server.");
+            String message = "Unknown";
+            data.putExtra("Reason", message);
+            setResult(1, data);
+            finish();
         }
-        return !ip.endsWith(".");
+
     }
 
+    /**
+     * The onChangeData function gets as a parameter a String data.
+     * The data is the data which changed.
+     * It updates according to the data.
+     * @param data String data which got changed.
+     */
     private void onChangeData(String data) {
         if (data == null) {
             return;
@@ -290,22 +102,20 @@ public class JoystickActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * The updateX function updates the x value of the joystick.
+     */
     private void updateX() {
         JoystickView view = findViewById(R.id.joystickView);
-        float newX = view.getInnerCircleCX();
-        newX = normalize(newX, view.getMinX(), view.getMaxX(), -1, 1);
+        float newX = 0;
+        if (!view.isInCenter()) {
+            newX = view.getInnerCircleCX();
+            newX = normalize(newX, view.getMinX(), view.getMaxX());
+        }
         try {
-            //here you must put your computer's IP address.
-//            InetAddress serverAddr = InetAddress.getByName(ip);
-            //create a socket to make the connection with the server
-//            Socket socket = new Socket(serverAddr, port);
             try {
-                //sends the message to the server
-//                OutputStream output = socket.getOutputStream();
-//                OutputStreamWriter osw = new OutputStreamWriter(output);
-                //FileInputStream fis = new FileInputStream(pic);
 
-                new AsyncSocketWriter(socket).execute("set /controls/flight/aileron " + String.valueOf(newX));
+                client.sendMessage("set /controls/flight/aileron " + newX);
 
             }
 
@@ -317,23 +127,21 @@ public class JoystickActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * The updateY function updates the y value of the joystick.
+     */
     private void updateY() {
         JoystickView view = findViewById(R.id.joystickView);
-        float newY = view.getInnerCircleCY();
-        newY = normalize(newY, view.getMinY(), view.getMaxY(), -1, 1);
-        newY = -newY;
+        float newY = 0;
+        if (!view.isInCenter()) {
+            newY = view.getInnerCircleCY();
+            newY = normalize(newY, view.getMinY(), view.getMaxY());
+            newY = -newY;
+        }
         try {
-            //here you must put your computer's IP address.
-//            InetAddress serverAddr = InetAddress.getByName(ip);
-            //create a socket to make the connection with the server
-//            Socket socket = new Socket(serverAddr, port);
             try {
-                //sends the message to the server
-//                OutputStream output = socket.getOutputStream();
-//                OutputStreamWriter osw = new OutputStreamWriter(output);
-                //FileInputStream fis = new FileInputStream(pic);
 
-                new AsyncSocketWriter(socket).execute("set /controls/flight/elevator " + String.valueOf(newY));
+                client.sendMessage("set /controls/flight/elevator " + newY);
 
             }
 
@@ -345,36 +153,43 @@ public class JoystickActivity extends AppCompatActivity {
         }
     }
 
-    private float normalize(float value, float min, float max, float newMin, float newMax) {
+    /**
+     * The normalize function which gets as parameters a float value, a float min and a float max.
+     * It normalizes the value min max normalization according to the parameters
+     * to the domain between -1 to 1.
+     * @param value The value to normalize.
+     * @param min The min value possible for the value.
+     * @param max The max value possible for the value.
+     * @return normalized value of the value from the parameters, min max normalization.
+     */
+    private float normalize(float value, float min, float max) {
+        float newMin = -1;
+        float newMax = 1;
         if ((max - min) == 0) {
             return value - min + newMin;
         }
         return (((value - min) / (max - min)) * (newMax - newMin)) + newMin;
     }
 
+    /**
+     * The onBackPressed function is the function which runs when back button is pressed.
+     */
     @Override
     public void onBackPressed() {
         setResult(0);
         super.onBackPressed();
-        if (ash != null) {
-            ash.closeSocket();
-        }
-        if (socket != null && socket.isConnected()) {
-            try {
-                socket.close();
-            } catch (Exception e) {
-                String message = e.getMessage();
-                if (message == null) {
-                    message = "Error Closing Socket";
-                }
-                Log.e("Closing Socket", message);
-            }
-        }
+        closeSocket();
     }
 
-    public void onSocketHandlerAsyncTaskFinish(Socket socketReturn) {
-        if (socketReturn != null) {
-            socket = socketReturn;
+    /**
+     * The onConnected function runs when the AsyncTask Of The Connection finishes.
+     * It gets in parameters a RuntimeException e of the RuntimeException which has occured
+     * in the connection if it is Null there hasn't been an Exception.
+     * @param e RuntimeException which has occured in the connection can be Null
+     *          if there hasn't been an Exception.
+     */
+    public void onConnected(@Nullable RuntimeException e) {
+        if (e == null) {
             View progressBarLayout = findViewById(R.id.progressBarLayout);
             View joystickViewLayout = findViewById(R.id.joystickViewLayout);
             progressBarLayout.setVisibility(View.INVISIBLE);
@@ -382,26 +197,66 @@ public class JoystickActivity extends AppCompatActivity {
         } else {
             Intent data = new Intent();
             data.putExtra("Error", "Error Connecting To Server.");
-            String message = "Connection Timed Out";
+            String message = e.getMessage();
             data.putExtra("Reason", message);
             setResult(1, data);
             finish();
         }
     }
 
+    /**
+     * The onCancelButtonClick function is the function which handles the click on the cancel button
+     * it gets as parameters a View view.
+     * @param view The view.
+     */
     public void onCancelButtonClick(View view) {
-        if (ash != null) {
-            ash.cancel(true);
-            ash.closeSocket();
-        }
+        closeSocket();
         setResult(0);
         finish();
     }
 
-    public boolean onOptionsItemSelected(MenuItem item){
-//        Intent myIntent = new Intent(getApplicationContext(), MyActivity.class);
-//        startActivityForResult(myIntent, 0);
+    /**
+     * The onOptionsItemSelected function is the function which runs when the back top arrow button
+     * is being clicked. It gets as parameters a MenuItem item.
+     * @param item MenuItem item.
+     * @return true.
+     */
+    public boolean onOptionsItemSelected(@NonNull MenuItem item){
         onBackPressed();
         return true;
+    }
+
+    /**
+     * The onDestroy function handles the destroy of the activity.
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        closeSocket();
+    }
+
+    /**
+     * The closeSocket function closes the client.
+     */
+    private void closeSocket() {
+        if (client != null) {
+            client.close();
+        }
+    }
+
+    /**
+     * The errorHandlingFunction gets as parameters a RuntimeException e
+     * and returns the error to the Main Activity with the data of it.
+     * @param e RuntimeExceptione that has occured.
+     */
+    private void errorHandlingFunction(RuntimeException e) {
+        Intent data = new Intent();
+        data.putExtra("Error", "Error With The Connection With The Server.");
+        String message = e.getMessage();
+        data.putExtra("Reason", message);
+        setResult(1, data);
+        client.close();
+        finish();
+
     }
 }
